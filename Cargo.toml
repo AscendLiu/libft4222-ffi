@@ -1,0 +1,26 @@
+[package]
+name = "libft4222"
+version = "0.1.0"
+description = "Rust FFI bindings to the FTDI LibFT4222 drivers."
+keywords = ["ftdi", "ffi", "usb","ft4222"]
+categories = ["external-ffi-bindings"]
+authors = ["AscendLiu"]
+edition = "2024"
+readme = "README.md"
+build = "build.rs"
+repository = "https://github.com/AscendLiu/libft4222-ffi"
+license-file = "LICENSE"
+links = "libft4222"
+
+
+[dependencies]
+cfg-if = "^1.0.0"
+
+[build-dependencies]
+bindgen = { version = "~0.71.1", optional = true }
+
+[dev-dependencies]
+version-sync = "~0.9.2"
+
+[features]
+static = []
