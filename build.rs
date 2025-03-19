@@ -8,48 +8,49 @@ fn search_path() -> PathBuf {
     match env::var("CARGO_CFG_TARGET_OS").unwrap().as_str() {
         "windows" => {
             path.push("windows");
-            match env::var("CARGO_CFG_TARGET_ARCH").unwrap().as_str() {
-                "x86_64" => {
-                    #[cfg(feature = "static")]
-                    {
-                        path.push("Static");
-                    }
-                    path.push("amd64");
+            #[cfg(feature = "static")]
+            {
+                path.push("lib");
+                path.push("ucrt");
+
+                match env::var("CARGO_CFG_TARGET_ARCH").unwrap().as_str() {
+                    "x86_64" => path.push("amd64"),
+                    "x86" => path.push("i386"),
+                    target_arch => panic!("Target architecture not supported: {target_arch}"),
                 }
-                "x86" => {
-                    #[cfg(feature = "static")]
-                    {
-                        path.push("Static");
-                    }
-                    path.push("i386");
-                }
-                "aarch64" => {
-                    path.push("arm64");
-                }
-                target_arch => panic!("Target architecture not supported: {target_arch}"),
             }
-        }
+
+            #[cfg(not(feature = "static"))]
+            {
+                path.push("dll");
+                match env::var("CARGO_CFG_TARGET_ARCH").unwrap().as_str() {
+                    "x86_64" => path.push("amd64"),
+                    "x86" => path.push("i386"),
+                    target_arch => panic!("Target architecture not supported: {target_arch}"),
+                }
+            }
+
+        },
         "linux" => {
             path.push("linux");
             match env::var("CARGO_CFG_TARGET_ARCH").unwrap().as_str() {
-                "x86_64" => path.push("x64"),
-                "x86" => path.push("x86"),
+                "x86_64" => path.push("build-x86_64"),
+                "x86" => path.push("build-x86_32"),
                 "arm" | "aarch64" => match env::var("TARGET").unwrap().as_str() {
                     "arm-unknown-linux-musleabihf" | "arm-unknown-linux-gnueabihf" => {
-                        path.push("armv6-hf");
+                        path.push("build-arm-v6-hf");
                     }
                     "armv7-unknown-linux-musleabihf" | "armv7-unknown-linux-gnueabihf" => {
-                        path.push("armv7-hf");
+                        path.push("build-arm-v7-hf");
                     }
                     "aarch64-unknown-linux-musl" | "aarch64-unknown-linux-gnu" => {
-                        path.push("armv8-hf");
+                        path.push("build-arm-v8");
                     }
                     target => panic!("Target not supported: {target}"),
                 },
                 target_arch => panic!("Target architecture not supported: {target_arch}"),
             }
-            path.push("build");
-        }
+        },
         "macos" => match env::var("CARGO_CFG_TARGET_ARCH").unwrap().as_str() {
             "x86_64" | "aarch64" => {
                 path.push("macos");
@@ -69,35 +70,23 @@ fn header_path() -> PathBuf {
     let mut path: PathBuf = PathBuf::from("vendor");
 
     match env::var("CARGO_CFG_TARGET_OS").unwrap().as_str() {
-        "windows" => path.push("windows"),
+        "windows" => {
+            path.push("windows");
+            path.push("LibFT4222.h");
+        },
         "linux" => {
             path.push("linux");
-            match env::var("CARGO_CFG_TARGET_ARCH").unwrap().as_str() {
-                "x86_64" => path.push("x64"),
-                "x86" => path.push("x86"),
-                "arm" | "aarch64" => match env::var("TARGET").unwrap().as_str() {
-                    "arm-unknown-linux-musleabihf" | "arm-unknown-linux-gnueabihf" => {
-                        path.push("armv6-hf");
-                    }
-                    "armv7-unknown-linux-musleabihf" | "armv7-unknown-linux-gnueabihf" => {
-                        path.push("armv7-hf");
-                    }
-                    "aarch64-unknown-linux-musl" | "aarch64-unknown-linux-gnu" => {
-                        path.push("armv8-hf");
-                    }
-                    target => panic!("Target not supported: {target}"),
-                },
-                target_arch => panic!("Target architecture not supported: {target_arch}"),
-            }
-        }
+            path.push("libft4222.h");
+        },
         "macos" => match env::var("CARGO_CFG_TARGET_ARCH").unwrap().as_str() {
-            "x86_64" | "aarch64" => path.push("macos"),
+            "x86_64" | "aarch64" => {
+                path.push("macos");
+                path.push("libft4222.h");
+            },
             target_arch => panic!("Target architecture not supported: {target_arch}"),
         },
         target_os => panic!("Target OS not supported: {target_os}"),
     }
-
-    path.push("ftd2xx.h");
 
     path
 }
@@ -118,7 +107,7 @@ fn clang_args() -> &'static [&'static str] {
 
 #[cfg(not(feature = "static"))]
 fn linker_options() {
-    println!("cargo:rustc-link-lib=dylib=ftd2xx");
+    println!("cargo:rustc-link-lib=dylib=libft4222");
     match env::var("CARGO_CFG_TARGET_OS").unwrap().as_str() {
         "macos" => {
             println!("cargo:rustc-link-lib=framework=IOKit");
@@ -131,7 +120,7 @@ fn linker_options() {
 
 #[cfg(feature = "static")]
 fn linker_options() {
-    println!("cargo:rustc-link-lib=static=ftd2xx");
+    println!("cargo:rustc-link-lib=static=libft4222");
 
     match env::var("CARGO_CFG_TARGET_OS").unwrap().as_str() {
         "windows" | "linux" => {}
